@@ -240,5 +240,23 @@ contract PausableToken is StandardToken, Pausable {
 /// or the contract is hacked.
 /// @author Merunas Grincalaitis <merunasgrincalaitis@gmail.com>
 contract Drops is PausableToken {
-   uint256 using SafeMath;
+   using SafeMath for uint256;
+
+   string public constant name = 'Drops';
+
+   string public constant symbol = 'DRP';
+
+   uint8 public constant decimals = 18;
+
+   uint256 public constant totalSupply = 150e24; // 150M tokens with 18 decimals
+
+   // The tokens that the owner will distribute across the development team and
+   // bounties using allowances
+   uint256 public constant initialBalance = 60e24;
+
+   /// @notice The constructor used to set the initial balance for the founder and development
+   /// the owner of those tokens will distribute the tokens accordingly with allowances
+   function Drops() public {
+      balances[msg.sender] = initialBalance;
+   }
 }
