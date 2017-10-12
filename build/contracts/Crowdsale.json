@@ -1,0 +1,15 @@
+{
+  "contract_name": "Crowdsale",
+  "abi": [],
+  "unlinked_binary": "0x60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00a165627a7a72305820698eb9e53840c7622c1a096d570b7b5e7a598834efa6fa72e4e64eef9bc36e3c0029",
+  "networks": {
+    "1507808363733": {
+      "events": {},
+      "links": {},
+      "address": "0xba220e881a384999fe6c4c830bf5eddb76706d24",
+      "updated_at": 1507808375556
+    }
+  },
+  "schema_version": "0.0.5",
+  "updated_at": 1507808375556
+}

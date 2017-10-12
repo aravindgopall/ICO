@@ -1,0 +1,15 @@
+{
+  "contract_name": "Presale",
+  "abi": [],
+  "unlinked_binary": "0x60606040523415600e57600080fd5b5b603680601c6000396000f30060606040525b600080fd00a165627a7a72305820b0072020951c2c67c9262501d2ee282726636f7a4e4114ef87e75ef043de4fea0029",
+  "networks": {
+    "1507808363733": {
+      "events": {},
+      "links": {},
+      "address": "0x0f64246d9352a3808587838fec5cf97c5d0cebab",
+      "updated_at": 1507808375556
+    }
+  },
+  "schema_version": "0.0.5",
+  "updated_at": 1507808375556
+}
