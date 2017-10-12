@@ -1,2 +1,2 @@
 # ICO
-The ICO repository for the Smart Contracts
+Repository for the Smart Contracts
