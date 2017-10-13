@@ -126,7 +126,7 @@ contract('Drops', accounts => {
          resolve()
       })
    })
-   it.skip("Should not allow to make transfers while paused", () => {
+   it("Should not allow to make transfers while paused", () => {
       return new Promise(async (resolve, reject) => {
          const from = accounts[0]
          const to = accounts[1]
@@ -144,17 +144,17 @@ contract('Drops', accounts => {
                from: from
             })
          } catch(e) {
-            console.log('Error')
-            console.log(e)
+            const finalBalance = await drops.balanceOf(from)
+            assert.ok(finalBalance.eq(initialBalance), "The final balance should remain unchange since the tranfers are blocked")
+
+            return resolve()
          }
-         const finalBalance = await drops.balanceOf(from)
 
-         assert.ok(finalBalance.eq(initialBalance), "The final balance should remain unchange since the tranfers are blocked")
-
-         resolve()
+         // If there's no exception it means that the transfer was executed which isn't the case
+         reject()
       })
    })
-   it.skip("Should not allow to make allowances while paused", () => {
+   it("Should not allow to make allowances while paused", () => {
       return new Promise(async (resolve, reject) => {
          const owner = accounts[0]
          const allowedUser = accounts[1]
@@ -167,14 +167,18 @@ contract('Drops', accounts => {
          const isPaused = await drops.paused()
          assert.ok(isPaused, "The contract should be pausable by the owner")
 
-         await drops.approve(allowedUser, amount, {
-            from: owner
-         })
-         const finalAllowance = await drops.allowance(owner, allowedUser)
+         try {
+            await drops.approve(allowedUser, amount, {
+               from: owner
+            })
+         } catch(e) {
+            const finalAllowance = await drops.allowance(owner, allowedUser)
+            assert.ok(finalAllowance.eq(initialAllowance), "The final allowance should remain unchange since the approvals are blocked")
 
-         assert.eq(finalAllowance.eq(initialAllowance), "The final allowance should remain unchange since the approvals are blocked")
+            return resolve()
+         }
 
-         resolve()
+         reject()
       })
    })
    it("Should be able to transfer the ownership to another user by the owner", () => {
