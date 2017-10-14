@@ -12,15 +12,16 @@ import './Drops.sol';
 contract Crowdsale {
    using SafeMath for uint256;
 
-   // The possible states of the ICO
-   enum State {
+   // The possible States of the ICO
+   enum States {
       NotStarted,
       Presale,
       PresaleEnded,
-      ICO
+      ICO,
+      ICOEnded
    }
 
-   State public currentState = State.NotStarted;
+   States public currentState = States.NotStarted;
    Drops public token;
    uint256 public presaleRate;
    uint256 public ICORate;
@@ -55,16 +56,9 @@ contract Crowdsale {
    event ICOFinalized();
 
    // Only allow the execution of the function before the crowdsale starts
-   modifier beforePresale() {
+   modifier beforeStarting() {
       require(now < presaleStartTime);
-      require(currentState == State.NotStarted);
-      _;
-   }
-
-   // To only allow the execution of the function before the ICO
-   modifier beforeICO() {
-      require(now < ICOStartTime);
-      require(currentState == State.PresaleEnded);
+      require(currentState == States.NotStarted);
       _;
    }
 
@@ -113,15 +107,18 @@ contract Crowdsale {
          ICOEndTime = _ICOEndTime;
    }
 
-   /// @notice The fallback function to buy tokens depending on the state of the
-   /// Smart Contract. It throws if the state is not presale or ICO
+   /// @notice The fallback function to buy tokens depending on the States of the
+   /// Smart Contract. It reverts if the States is not a valid one to refund the
+   /// ether sent to the contract.
    function () public payable {
-      require(currentState == State.Presale || currentState == State.ICO);
+      updateState();
 
-      if(currentState == State.Presale)
+      if(currentState == States.Presale)
          buyPresaleTokens();
-      else if(currentState == State.ICO)
+      else if(currentState == States.ICO)
          buyICOTokens();
+      else
+         revert();
    }
 
    /// @notice To buy presale tokens using the presale rate
@@ -132,5 +129,43 @@ contract Crowdsale {
    /// @notice To buy ICO tokens with the ICO rate
    function buyICOTokens() internal {
       // TODO
+   }
+
+   /// @notice To set the rates for the presale and ICO by the owner before starting
+   /// @param _presaleRate The rate of the presale
+   /// @param _ICORate The rate of the ICO
+   function setRates(uint256 _presaleRate, uint256 _ICORate) public onlyOwner beforeStarting {
+      require(_presaleRate > 0 && _ICORate > 0);
+
+      presaleRate = _presaleRate;
+      ICORate = _ICORate;
+   }
+
+   /// @notice Updates the States of the Contract depending on the time and States
+   function updateState() public {
+      require(currentState != States.ICOEnded);
+
+      if(currentState == States.ICO)
+         if(now > ICOEndTime) currentState = States.ICOEnded;
+      else if(currentState == States.PresaleEnded)
+         if(now > ICOStartTime) currentState = States.ICO;
+      else if(currentState == States.Presale)
+         if(now > presaleEndTime) currentState = States.PresaleEnded;
+      else if(currentState == States.NotStarted)
+         if(now > presaleStartTime) currentState = States.Presale;
+   }
+
+   /// @notice To get the current States as a string
+   function getStates() public constant returns(string) {
+      if(currentState == States.NotStarted)
+         return 'not started';
+      else if(currentState == States.Presale)
+         return 'presale';
+      else if(currentState == States.PresaleEnded)
+         return 'presale ended';
+      else if(currentState == States.ICO)
+         return 'ico';
+      else if(currentState == States.ICOEnded)
+         return 'ico ended';
    }
 }
