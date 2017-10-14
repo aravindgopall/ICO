@@ -240,8 +240,6 @@ contract PausableToken is StandardToken, Pausable {
 /// or the contract is hacked.
 /// @author Merunas Grincalaitis <merunasgrincalaitis@gmail.com>
 contract Drops is PausableToken {
-   using SafeMath for uint256;
-
    string public constant name = 'Drops';
 
    string public constant symbol = 'DRP';
