@@ -242,7 +242,7 @@ contract PausableToken is StandardToken, Pausable {
 contract Drops is PausableToken {
    string public constant name = 'Drops';
 
-   string public constant symbol = 'DRP';
+   string public constant symbol = 'AQUA';
 
    uint8 public constant decimals = 18;
 

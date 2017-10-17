@@ -7,9 +7,9 @@ import './Drops.sol';
 // Set the default startime and endtime of the presale and ico in the variables
 // Constructor set the token, presaleStartTime, presaleEndTime, ICOStartTime, ICOEndTime
 
-/// @title The crowdsale contract that will be used to sell the Presale & ICO tokens
+/// @title The ICO contract that will be used to sell the Presale & ICO tokens
 /// @author Merunas Grincalaitis <merunasgrincalaitis@gmail.com>
-contract Crowdsale {
+contract Crowdsale is Pausable {
    using SafeMath for uint256;
 
    // The possible States of the ICO
@@ -29,21 +29,26 @@ contract Crowdsale {
    uint256 public presaleEndTime;
    uint256 public ICOStartTime;
    uint256 public ICOEndTime;
+
+   // How many tokens we want to raise presale
    uint256 public limitPresaleContribution = 7.5e24;
-   uint256 public limitCrowdsaleContribution = 75e24;
+
+   // How many tokens we want to raise on the ICO
+   uint256 public limitICOContribution = 75e24;
    address public wallet;
-   uint256 public weiRaised;
-   uint256 public tokensRaised;
+   uint256 public weiPresaleRaised;
+   uint256 public tokensPresaleRaised;
+   uint256 public weiICORaised;
+   uint256 public tokensICORaised;
    uint256 public counterPresaleTransactions;
    uint256 public counterICOTransactions;
-   uint256 public minPurchase = 100 finney;
+   uint256 public minPurchase = 100 finney; // 0.1 ether is the minimum
    uint256 public maxPurchase = 2000 ether;
-   bool public isEnded = false;
 
-   // How much each user paid for the crowdsale
-   mapping(address => uint256) public crowdsaleBalances;
+   // How much each user paid for the presale + ICO
+   mapping(address => uint256) public ICOBalances;
 
-   // How many tokens each user got for the crowdsale
+   // How many tokens each user got for the presale
    mapping(address => uint256) public tokensBought;
 
    // To indicate who purchased what amount of tokens and who received what amount of wei
@@ -55,10 +60,17 @@ contract Crowdsale {
    event ICOStarted();
    event ICOFinalized();
 
-   // Only allow the execution of the function before the crowdsale starts
+   // Only allow the execution of the function before the ICO starts
    modifier beforeStarting() {
       require(now < presaleStartTime);
       require(currentState == States.NotStarted);
+      _;
+   }
+
+   // Only after the Presale and ICO
+   modifier afterStarting() {
+      require(now > presaleEndTime);
+      require(current == States.PresaleEnded || current == States.ICOEnded);
       _;
    }
 
@@ -73,7 +85,7 @@ contract Crowdsale {
    /// the default value of the variable set above
    /// @param _ICOEndTime When the ICO should end. If it's 0, we'll use the
    /// default value of the variable
-   function Crowdsale(
+   function ICO(
       address _wallet,
       address _tokenAddress,
       uint256 _presaleStartTime,
@@ -122,13 +134,27 @@ contract Crowdsale {
    }
 
    /// @notice To buy presale tokens using the presale rate
-   function buyPresaleTokens() internal {
-      // TODO
+   function buyPresaleTokens() internal whenNotPaused {
+      require(validPresalePurchase());
+
+      uint256 amountPaid = msg.value;
+      uint256 tokens = amountPaid.mul(presaleRate);
+
+      weiPresaleRaised = weiPresaleRaised.add(amountPaid);
+      tokensPresaleRaised = tokensPresaleRaised.add(tokens);
+      counterPresaleTransactions = counterPresaleTransactions.add(1);
    }
 
    /// @notice To buy ICO tokens with the ICO rate
-   function buyICOTokens() internal {
-      // TODO
+   function buyICOTokens() internal whenNotPaused {
+      require(validICOPurchase());
+
+      uint256 amountPaid = msg.value;
+      uint256 tokens = amountPaid.mul(ICORate);
+
+      weiICORaised = weiICORaised.add(amountPaid);
+      tokensICORaised = tokensICORaised.add(tokens);
+      counterICOTransactions = counterICOTransactions.add(1);
    }
 
    /// @notice To set the rates for the presale and ICO by the owner before starting
@@ -155,6 +181,11 @@ contract Crowdsale {
          if(now > presaleStartTime) currentState = States.Presale;
    }
 
+   /// @notice To extract the balance of the contract after the presale and ICO only
+   function extractFundsRaised() public onlyOwner afterStarting whenNotPaused {
+      wallet.transfer(this.balance);
+   }
+
    /// @notice To get the current States as a string
    function getStates() public constant returns(string) {
       if(currentState == States.NotStarted)
@@ -167,5 +198,25 @@ contract Crowdsale {
          return 'ico';
       else if(currentState == States.ICOEnded)
          return 'ico ended';
+   }
+
+   /// @notice To verify that the purchase of presale tokens is valid
+   function validPresalePurchase() internal constant returns(bool) {
+      bool withinTime = now >= presaleStartTime && now < presaleEndTime;
+      bool withinLimit = tokensPresaleRaised < limitPresaleContribution;
+      bool nonZeroPurchase = msg.value > 0;
+
+      return withinTime && withinLimit && nonZeroPurchase;
+   }
+
+   /// @notice To verify that the purchase of ICO tokens is valid
+   function validICOPurchase() internal constant returns(bool) {
+      bool withinTime = now >= ICOStartTime && now < ICOEndTime;
+      bool withinLimit = tokensICORaised < limitICOContribution;
+      bool nonZeroPurchase = msg.value > 0;
+      bool userLimit = ICOBalances[msg.sender] < maxPurchase;
+      bool combinedBalance = ICOBalances[msg.sender].add(msg.value) <= maxPurchase;
+
+      return withinTime && withinLimit && nonZeroPurchase && userLimit && combinedBalance;
    }
 }

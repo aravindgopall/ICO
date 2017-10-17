@@ -1,7 +1,7 @@
 const assert = require('assert')
 const Drops = artifacts.require('Drops')
 const totalSupply = 150e24
-const symbol = 'DRP'
+const symbol = 'AQUA'
 
 // The token instance
 let drops
