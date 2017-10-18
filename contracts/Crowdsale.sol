@@ -3,10 +3,6 @@ pragma solidity 0.4.15;
 // Replace this for the actual code when deploying to the blockchain
 import './Drops.sol';
 
-// TODOS
-// Set the default startime and endtime of the presale and ico in the variables
-// Constructor set the token, presaleStartTime, presaleEndTime, ICOStartTime, ICOEndTime
-
 /// @title The ICO contract that will be used to sell the Presale & ICO tokens
 /// @author Merunas Grincalaitis <merunasgrincalaitis@gmail.com>
 contract Crowdsale is Pausable {
@@ -48,8 +44,8 @@ contract Crowdsale is Pausable {
    // How much each user paid for the presale + ICO
    mapping(address => uint256) public ICOBalances;
 
-   // How many tokens each user got for the presale
-   mapping(address => uint256) public tokensBought;
+   // How many tokens each user got for the presale + ICO
+   mapping(address => uint256) public tokenBalances;
 
    // To indicate who purchased what amount of tokens and who received what amount of wei
    event TokenPurchase(address indexed buyer, uint256 value, uint256 amountOfTokens);
@@ -137,12 +133,14 @@ contract Crowdsale is Pausable {
    function buyPresaleTokens() internal whenNotPaused {
       require(validPresalePurchase());
 
-      uint256 amountPaid = msg.value;
-      uint256 tokens = amountPaid.mul(presaleRate);
+      uint256 tokens = msg.value.mul(presaleRate);
 
-      weiPresaleRaised = weiPresaleRaised.add(amountPaid);
+      weiPresaleRaised = weiPresaleRaised.add(msg.value);
       tokensPresaleRaised = tokensPresaleRaised.add(tokens);
       counterPresaleTransactions = counterPresaleTransactions.add(1);
+
+      ICOBalances[msg.sender] = ICOBalances[msg.sender].add(msg.value);
+      tokenBalances[msg.sender] = tokenBalances[msg.sender].add(tokens);
 
       // Send the tokens
       token.transferFrom(token.address, msg.sender, tokens);
@@ -152,12 +150,14 @@ contract Crowdsale is Pausable {
    function buyICOTokens() internal whenNotPaused {
       require(validICOPurchase());
 
-      uint256 amountPaid = msg.value;
-      uint256 tokens = amountPaid.mul(ICORate);
+      uint256 tokens = msg.value.mul(ICORate);
 
-      weiICORaised = weiICORaised.add(amountPaid);
+      weiICORaised = weiICORaised.add(msg.value);
       tokensICORaised = tokensICORaised.add(tokens);
       counterICOTransactions = counterICOTransactions.add(1);
+
+      ICOBalances[msg.sender] = ICOBalances[msg.sender].add(msg.value);
+      tokenBalances[msg.sender] = tokenBalances[msg.sender].add(tokens);
 
       // Send the tokens
       token.transferFrom(token.address, msg.sender, tokens);
@@ -175,7 +175,8 @@ contract Crowdsale is Pausable {
 
    /// @notice Updates the States of the Contract depending on the time and States
    function updateState() public {
-      require(currentState != States.ICOEnded);
+      if(currentState == States.ICOEnded)
+         return endICO();
 
       if(currentState == States.ICO)
          if(now > ICOEndTime) currentState = States.ICOEnded;
@@ -190,6 +191,12 @@ contract Crowdsale is Pausable {
    /// @notice To extract the balance of the contract after the presale and ICO only
    function extractFundsRaised() public onlyOwner afterStarting whenNotPaused {
       wallet.transfer(this.balance);
+   }
+
+   /// @notice When the ICO ends we want to distribute the tokens to each user and
+   /// not before because the tokens should only be tradable after the ICO
+   function endICO() internal {
+
    }
 
    /// @notice To get the current States as a string

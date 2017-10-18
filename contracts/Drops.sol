@@ -248,9 +248,47 @@ contract Drops is PausableToken {
 
    uint256 public constant totalSupply = 150e24; // 150M tokens with 18 decimals
 
+   uint256 public constant ICOEndTime;
+
+   // Only allow token transfers after the ICO
+   modifier afterICO() {
+      require(now >= ICOEndTime);
+      _;
+   }
+
    /// @notice The constructor used to set the initial balance for the founder and development
    /// the owner of those tokens will distribute the tokens accordingly with allowances
-   function Drops() public {
+   /// @param _ICOEndTime When will the ICO end to allow token transfers after the ICO only,
+   /// required parameter
+   function Drops(uint256 _ICOEndTime) public {
+      require(_ICOEndTime > 0);
+
       balances[msg.sender] = totalSupply;
+      ICOEndTime = _ICOEndTime;
+   }
+
+   /// @notice Override the functions to not allow token transfers until the end of the ICO
+   function transfer(address _to, uint256 _value) public whenNotPaused afterICO returns(bool) {
+      return super.transfer(_to, _value);
+   }
+
+   /// @notice Override the functions to not allow token transfers until the end of the ICO
+   function transferFrom(address _from, address _to, uint256 _value) public whenNotPaused afterICO returns(bool) {
+      return super.transferFrom(_from, _to, _value);
+   }
+
+   /// @notice Override the functions to not allow token transfers until the end of the ICO
+   function approve(address _spender, uint256 _value) public whenNotPaused afterICO returns(bool) {
+     return super.approve(_spender, _value);
+   }
+
+   /// @notice Override the functions to not allow token transfers until the end of the ICO
+   function increaseApproval(address _spender, uint _addedValue) public whenNotPaused afterICO returns(bool success) {
+     return super.increaseApproval(_spender, _addedValue);
+   }
+
+   /// @notice Override the functions to not allow token transfers until the end of the ICO
+   function decreaseApproval(address _spender, uint _subtractedValue) public whenNotPaused afterICO returns(bool success) {
+     return super.decreaseApproval(_spender, _subtractedValue);
    }
 }
