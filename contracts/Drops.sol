@@ -252,7 +252,7 @@ contract Drops is PausableToken {
 
    // Only allow token transfers after the ICO
    modifier afterICO() {
-      require(now >= ICOEndTime);
+      require(msg.sender == owner || now >= ICOEndTime);
       _;
    }
 
