@@ -248,7 +248,7 @@ contract Drops is PausableToken {
 
    uint256 public constant totalSupply = 150e24; // 150M tokens with 18 decimals
 
-   uint256 public constant ICOEndTime;
+   uint256 public ICOEndTime;
 
    // Only allow token transfers after the ICO
    modifier afterICO() {

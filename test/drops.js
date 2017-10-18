@@ -5,6 +5,7 @@ const symbol = 'AQUA'
 
 // The token instance
 let drops
+let ICOEndTime = String(new Date().getTime()).substring(0, String(new Date().getTime()).length - 3)
 
 // How transferFrom works:
 // You send ether _to a contract from the ether the _owner allowed _you to use
@@ -12,7 +13,7 @@ contract('Drops', accounts => {
 
    // Deploy the token every new test
    beforeEach(async () => {
-      drops = await Drops.new()
+      drops = await Drops.new(ICOEndTime)
    })
 
    it("Should generate the right amount of total supply", () => {
