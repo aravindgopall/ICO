@@ -6,25 +6,30 @@ const Crowdsale = artifacts.require('Crowdsale')
 let drops
 let crowdsale
 
+// Returns the number of days in seconds to add to the timestamp
+function days(numberOfDays) {
+   return 60 * 60 * 24 * numberOfDays
+}
+
 // How transferFrom works:
 // You send tokens _to a contract from the tokens the _owner allowed _you to use
-contract('Crowdsale', function([tokenAddress,investor, wallet, purchaser]){
+contract('Crowdsale', function([tokenAddress, investor, wallet, purchaser]){
 
    // Deploy the token every new test
    beforeEach(async () => {
-      
-      this.presaleStartTime = web3.eth.getBlock('latest').timestamp + this.days(7)
-      this.presaleEndTime = this.presaleStartTime + this.days(7)
-      this.ICOStartTime = this.presaleEndTime + this.days(7)
-      this.ICOEndTime = this.ICOStartTime + this.days(7)
+
+      this.presaleStartTime = web3.eth.getBlock('latest').timestamp + days(7)
+      this.presaleEndTime = this.presaleStartTime + days(7)
+      this.ICOStartTime = this.presaleEndTime + days(7)
+      this.ICOEndTime = this.ICOStartTime + days(7)
 
       drops = await Drops.new(this.ICOEndTime)
-      crowdsale = await Crowdsale.new(wallet,tokenAddress,this.presaleStartTime,this.presaleEndTime,this.ICOStartTime,this.ICOEndTime)
+      crowdsale = await Crowdsale.new(wallet, drops.address, this.presaleStartTime,this.presaleEndTime,this.ICOStartTime,this.ICOEndTime)
    })
 
-   it("the get states function return value should match with current state value",()=> {
+   it.only("the get states function return value should match with current state value",()=> {
 		return new Promise(async (resolve,reject) => {
-			const currentState =  await crowdsale.States.NotStarted
+			const currentState = await crowdsale.currentState()
 
 			assert.equal('not started', await crowdsale.getStates()," the get states function is not working properly")
 			resolve()
@@ -46,7 +51,7 @@ contract('Crowdsale', function([tokenAddress,investor, wallet, purchaser]){
 		it('should reject payments before start',() => {
 			return new Promise(async (resolve,reject) =>{
 				try{
-					await crowdsale.buyPresaleTokens() 
+					await crowdsale.buyPresaleTokens()
 				}catch(e){
 					return resolve()
 				}
@@ -115,7 +120,7 @@ contract('Crowdsale', function([tokenAddress,investor, wallet, purchaser]){
 			})
 		})
 	})
-	
+
 	describe('accepting payments based on paused', () => {
 		it('should not accept payments on pause',() => {
 			return new Promise(async (resolve,reject) => {
