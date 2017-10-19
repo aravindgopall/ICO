@@ -39,7 +39,6 @@ function increaseTimeTo(target){
 	  let diff = target - now;
 	  return increaseTime(diff);
 }
-
 // How transferFrom works:
 // You send tokens _to a contract from the tokens the _owner allowed _you to use
 contract('Crowdsale', function([tokenAddress, investor, wallet, purchaser]){
@@ -56,7 +55,7 @@ contract('Crowdsale', function([tokenAddress, investor, wallet, purchaser]){
       crowdsale = await Crowdsale.new(wallet, drops.address, this.presaleStartTime,this.presaleEndTime,this.ICOStartTime,this.ICOEndTime)
    })
 
-   it("the get states function return value should match with current state value",()=> {
+   it.only("the get states function return value should match with current state value",()=> {
 		return new Promise(async (resolve,reject) => {
 			const currentState = await crowdsale.currentState()
 
