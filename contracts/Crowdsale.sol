@@ -81,7 +81,7 @@ contract Crowdsale is Pausable {
    /// the default value of the variable set above
    /// @param _ICOEndTime When the ICO should end. If it's 0, we'll use the
    /// default value of the variable
-   function ICO(
+   function Crowdsale(
       address _wallet,
       address _tokenAddress,
       uint256 _presaleStartTime,
